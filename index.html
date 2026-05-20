@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Sky Rush ULTIMATE</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Exo 2',sans-serif;overflow:hidden;touch-action:none;}
+#gw{position:relative;width:390px;height:100vh;max-height:844px;overflow:hidden;background:#000;}
+canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;background:rgba(0,5,20,0.95);}
+.hidden{display:none!important;}
+
+/* TYPOGRAPHY */
+.logo{font-family:'Orbitron',sans-serif;font-size:2.6rem;font-weight:900;background:linear-gradient(135deg,#00d4ff,#fff,#7b61ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px;margin-bottom:4px;filter:drop-shadow(0 0 20px rgba(0,212,255,0.6));}
+.logo-tag{font-size:0.6rem;letter-spacing:5px;color:#ffd700;border:1px solid rgba(255,215,0,0.4);padding:4px 14px;border-radius:20px;margin-bottom:8px;}
+.logo-sub{font-size:0.65rem;letter-spacing:5px;color:rgba(0,212,255,0.5);margin-bottom:30px;}
+
+/* BUTTONS */
+.btn{border:none;border-radius:28px;font-family:'Orbitron',sans-serif;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all 0.2s;}
+.btn:active{transform:scale(0.95);}
+.btn-main{width:220px;height:56px;background:linear-gradient(135deg,#00d4ff,#7b61ff);color:#000;font-size:1rem;box-shadow:0 0 30px rgba(0,212,255,0.4);margin-bottom:12px;}
+.btn-outline{width:190px;height:45px;background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);font-size:0.75rem;margin-bottom:10px;}
+.btn-gold{background:linear-gradient(135deg,#ffd700,#ff9900);color:#000;}
+
+/* HUD */
+#hud{position:absolute;top:0;left:0;right:0;padding:16px 16px 0;z-index:5;pointer-events:none;}
+.hud-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.hud-left,.hud-right{display:flex;flex-direction:column;gap:3px;}
+.hud-score{font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:900;color:#fff;text-shadow:0 0 15px rgba(0,212,255,0.8);}
+.hud-sub{font-size:0.6rem;letter-spacing:2px;color:rgba(0,212,255,0.6);}
+.hud-gems{font-size:1rem;color:#ffd700;font-weight:700;}
+.hud-level{font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#7b61ff;font-weight:700;text-align:right;}
+.hud-shield{font-size:1.1rem;}
+
+/* HEALTH BAR */
+.health-bar-wrap{margin-top:8px;background:rgba(255,255,255,0.08);border-radius:4px;height:6px;overflow:hidden;}
+.health-bar{height:100%;background:linear-gradient(90deg,#00ff88,#00d4ff);border-radius:4px;transition:width 0.3s;}
+
+/* BOSS BAR */
+#bossBar{position:absolute;top:90px;left:16px;right:16px;z-index:5;pointer-events:none;display:none;}
+.boss-label{font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:3px;color:#ff4444;margin-bottom:4px;text-shadow:0 0 10px rgba(255,68,68,0.8);}
+.boss-track{background:rgba(255,255,255,0.08);border-radius:5px;height:10px;overflow:hidden;border:1px solid rgba(255,68,68,0.3);}
+.boss-fill{height:100%;background:linear-gradient(90deg,#ff4444,#ff8800);border-radius:5px;transition:width 0.3s;box-shadow:0 0 10px rgba(255,68,68,0.5);}
+
+/* LEVEL UP BANNER */
+#lvlBanner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;text-align:center;pointer-events:none;opacity:0;transition:opacity 0.3s;}
+#lvlBanner.show{opacity:1;}
+.lvl-txt{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:900;color:#ffd700;text-shadow:0 0 30px rgba(255,215,0,0.9);letter-spacing:4px;}
+.lvl-sub{font-size:0.8rem;letter-spacing:3px;color:rgba(255,215,0,0.7);margin-top:4px;}
+
+/* FIRE BUTTON */
+#fireBtn{position:absolute;bottom:30px;right:20px;width:75px;height:75px;border-radius:50%;background:linear-gradient(135deg,#ff4444,#ff8800);border:3px solid rgba(255,255,255,0.2);z-index:6;display:flex;align-items:center;justify-content:center;font-size:1.8rem;cursor:pointer;box-shadow:0 0 25px rgba(255,68,68,0.5);transition:all 0.1s;user-select:none;}
+#fireBtn:active{transform:scale(0.9);box-shadow:0 0 40px rgba(255,68,68,0.9);}
+
+/* LEFT/RIGHT BUTTONS */
+#leftBtn,#rightBtn{position:absolute;bottom:30px;width:65px;height:65px;border-radius:50%;background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.15);z-index:6;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;user-select:none;}
+#leftBtn{left:20px;}
+#rightBtn{left:100px;}
+#leftBtn:active,#rightBtn:active{background:rgba(0,212,255,0.15);border-color:rgba(0,212,255,0.5);}
+
+/* SHOP */
+#shopScreen{overflow-y:auto;}
+.shop-title{font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:900;color:#fff;margin-bottom:4px;}
+.shop-gems{color:#ffd700;font-size:0.9rem;margin-bottom:20px;}
+.skin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;width:330px;}
+.skin-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.skin-card.owned{border-color:rgba(0,212,255,0.4);background:rgba(0,212,255,0.05);}
+.skin-card.selected{border-color:#ffd700;background:rgba(255,215,0,0.08);box-shadow:0 0 15px rgba(255,215,0,0.2);}
+.skin-card:active{transform:scale(0.95);}
+.skin-emoji{font-size:2.2rem;margin-bottom:6px;}
+.skin-name{font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.6);margin-bottom:6px;}
+.skin-price{font-size:0.7rem;color:#ffd700;font-weight:700;}
+.skin-price.owned{color:#00ff88;}
+.skin-price.selected{color:#ffd700;}
+
+/* LEADERBOARD */
+#lbScreen{}
+.lb-title{font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:900;color:#fff;margin-bottom:4px;}
+.lb-sub{font-size:0.65rem;letter-spacing:3px;color:rgba(0,212,255,0.5);margin-bottom:20px;}
+.lb-list{width:320px;margin-bottom:20px;}
+.lb-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;margin-bottom:8px;}
+.lb-rank{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:900;width:30px;text-align:center;}
+.lb-rank.gold{color:#ffd700;}
+.lb-rank.silver{color:#aaa;}
+.lb-rank.bronze{color:#cd7f32;}
+.lb-info{flex:1;}
+.lb-name{font-size:0.85rem;font-weight:700;color:#fff;}
+.lb-score{font-size:0.7rem;color:rgba(0,212,255,0.7);}
+.lb-level{font-family:'Orbitron',sans-serif;font-size:0.75rem;color:#7b61ff;font-weight:700;}
+
+/* GAME OVER */
+.go-title{font-family:'Orbitron',sans-serif;font-size:2.2rem;font-weight:900;color:#fff;letter-spacing:4px;margin-bottom:4px;}
+.go-sub{font-size:0.7rem;letter-spacing:4px;color:rgba(0,212,255,0.5);margin-bottom:30px;}
+.result-box{background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.12);border-radius:20px;padding:24px 40px;text-align:center;margin-bottom:30px;width:280px;}
+.result-score{font-family:'Orbitron',sans-serif;font-size:3rem;font-weight:900;color:#00d4ff;text-shadow:0 0 25px rgba(0,212,255,0.8);line-height:1;}
+.result-lbl{font-size:0.65rem;letter-spacing:3px;color:rgba(255,255,255,0.3);margin-top:4px;}
+.result-gems{font-size:1.1rem;color:#ffd700;margin-top:8px;}
+.result-level{font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#7b61ff;margin-top:4px;}
+.new-record{font-size:0.65rem;letter-spacing:2px;color:#ffd700;background:rgba(255,215,0,0.1);padding:4px 12px;border-radius:20px;margin-bottom:8px;display:none;}
+.new-record.show{display:block;}
+
+/* COMBO */
+#comboEl{position:absolute;top:110px;left:50%;transform:translateX(-50%);z-index:6;font-family:'Orbitron',sans-serif;font-size:1.2rem;font-weight:900;color:#ffd700;text-shadow:0 0 20px rgba(255,215,0,0.8);opacity:0;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;}
+#comboEl.show{opacity:1;}
+
+/* POWERUP MSG */
+#pwMsg{position:absolute;top:160px;left:50%;transform:translateX(-50%);z-index:6;font-size:0.85rem;font-weight:700;color:#00ff88;text-shadow:0 0 15px rgba(0,255,136,0.8);opacity:0;pointer-events:none;white-space:nowrap;}
+#pwMsg.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="gw">
+<canvas id="gc"></canvas>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div class="hud-top">
+    <div class="hud-left">
+      <div class="hud-score" id="hudScore">0</div>
+      <div class="hud-sub">ALTITUDE</div>
+      <div class="hud-gems" id="hudGems">💎 0</div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-level" id="hudLevel">LVL 1</div>
+      <div class="hud-shield" id="hudShield"></div>
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.3);letter-spacing:1px;text-align:right;margin-top:2px;">HP</div>
+      <div class="health-bar-wrap" style="width:90px;">
+        <div class="health-bar" id="healthBar" style="width:100%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOSS BAR -->
+<div id="bossBar">
+  <div class="boss-label" id="bossLabel">👹 BOSS — ZONE 1</div>
+  <div class="boss-track"><div class="boss-fill" id="bossFill" style="width:100%"></div></div>
+</div>
+
+<!-- LEVEL BANNER -->
+<div id="lvlBanner">
+  <div class="lvl-txt" id="lvlTxt">LEVEL UP!</div>
+  <div class="lvl-sub" id="lvlSub">ZONE 2 UNLOCKED</div>
+</div>
+
+<!-- COMBO -->
+<div id="comboEl"></div>
+
+<!-- POWER MSG -->
+<div id="pwMsg"></div>
+
+<!-- FIRE BUTTON -->
+<div id="fireBtn" class="hidden">🔫</div>
+
+<!-- MOVE BUTTONS -->
+<div id="leftBtn" class="hidden">◀</div>
+<div id="rightBtn" class="hidden">▶</div>
+
+<!-- START SCREEN -->
+<div class="screen" id="ss">
+  <div class="logo-tag">BATTLE ROYALE EDITION</div>
+  <div class="logo">SKY RUSH</div>
+  <div class="logo-sub">ULTIMATE</div>
+  <div style="font-size:3rem;margin-bottom:10px;animation:float 2s ease-in-out infinite;">🚀</div>
+  <div style="font-family:'Orbitron',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:4px;" id="ssHS">BEST: 0</div>
+  <div style="color:#ffd700;font-size:0.85rem;margin-bottom:25px;" id="ssGems">💎 0 gems</div>
+  <button class="btn btn-main" id="startBtn">▶ PLAY</button>
+  <button class="btn btn-outline" id="shopBtn">🛒 SHOP</button>
+  <button class="btn btn-outline" id="lbBtn">🏆 LEADERBOARD</button>
+  <div style="font-size:0.7rem;color:rgba(255,255,255,0.2);margin-top:15px;text-align:center;line-height:2;">◀ ▶ MOVE &nbsp;|&nbsp; 🔫 SHOOT BOSS</div>
+</div>
+
+<!-- SHOP -->
+<div class="screen hidden" id="shopScreen">
+  <div class="shop-title">🛒 SHOP</div>
+  <div class="shop-gems" id="shopGems">💎 0 gems</div>
+  <div class="skin-grid" id="skinGrid"></div>
+  <button class="btn btn-outline" id="shopBack">← BACK</button>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="screen hidden" id="lbScreen">
+  <div class="lb-title">🏆 LEADERBOARD</div>
+  <div class="lb-sub">LOCAL CHAMPIONS</div>
+  <div class="lb-list" id="lbList"></div>
+  <button class="btn btn-outline" id="lbBack">← BACK</button>
+</div>
+
+<!-- GAME OVER -->
+<div class="screen hidden" id="gos">
+  <div class="go-title">GAME OVER</div>
+  <div class="go-sub">MISSION FAILED</div>
+  <div class="result-box">
+    <div class="new-record" id="newRec">⭐ NEW RECORD!</div>
+    <div class="result-score" id="goScore">0</div>
+    <div class="result-lbl">ALTITUDE</div>
+    <div class="result-gems" id="goGems">+💎 0</div>
+    <div class="result-level" id="goLevel">REACHED ZONE 1</div>
+  </div>
+  <button class="btn btn-main" id="retryBtn">🔄 RETRY</button>
+  <button class="btn btn-outline" style="margin-top:10px;" id="goMenuBtn">🏠 MENU</button>
+</div>
+
+</div>
+
+<style>
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+</style>
+
+<script>
+// ============ CANVAS SETUP ============
+const canvas = document.getElementById('gc');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('gw');
+let W, H;
+function resize(){W=canvas.width=wrap.clientWidth;H=canvas.height=wrap.clientHeight;}
+resize();
+window.addEventListener('resize',resize);
+
+// ============ SAVE DATA ============
+let saveData = JSON.parse(localStorage.getItem('skyRushUlt')||'{"hs":0,"gems":0,"owned":["rocket"],"selected":"rocket","lb":[]}');
+function save(){localStorage.setItem('skyRushUlt',JSON.stringify(saveData));}
+
+// ============ SKINS ============
+const SKINS = {
+  rocket:  {name:'ROCKET',  emoji:'🚀', price:0,    color:'#00d4ff'},
+  ufo:     {name:'UFO',     emoji:'🛸', price:150,  color:'#00ff88'},
+  dragon:  {name:'DRAGON',  emoji:'🐉', price:300,  color:'#ff6b00'},
+  star:    {name:'⭐ STAR',  emoji:'⭐', price:500,  color:'#ffd700'},
+  skull:   {name:'SKULL',   emoji:'💀', price:800,  color:'#aa88ff'},
+  fire:    {name:'FIRE',    emoji:'🔥', price:1200, color:'#ff4444'},
+};
+
+// ============ ZONES ============
+const ZONES = [
+  {name:'SKY ZONE',    platColor:'#00d4ff', bgTop:'#000510', bgBot:'#001030', bossEmoji:'👾', bossHP:5,  bossName:'SPACE INVADER'},
+  {name:'STORM ZONE',  platColor:'#7b61ff', bgTop:'#0a0020', bgBot:'#1a0040', bossEmoji:'⚡', bossHP:8,  bossName:'STORM LORD'},
+  {name:'FIRE ZONE',   platColor:'#ff6b00', bgTop:'#200500', bgBot:'#400a00', bossEmoji:'🔥', bossHP:12, bossName:'FIRE TITAN'},
+  {name:'ICE ZONE',    platColor:'#4ecdc4', bgTop:'#001520', bgBot:'#002535', bossEmoji:'❄️', bossHP:16, bossName:'ICE QUEEN'},
+  {name:'VOID ZONE',   platColor:'#aa00ff', bgTop:'#100020', bgBot:'#200040', bossEmoji:'🌀', bossHP:22, bossName:'VOID KEEPER'},
+];
+
+// ============ GAME STATE ============
+let state = 'start';
+let score=0, gems=0, level=1, zone=0, combo=0, comboTimer=0;
+let playerHP=3, maxHP=3, shield=false, shieldTimer=0;
+let cameraY=0, gameSpeed=1;
+let bossActive=false, bossHP=0, bossMaxHP=0, bossX=0, bossY=60, bossDX=2, bossHitTimer=0;
+let lvlBannerTimer=0;
+let pwMsgTimer=0;
+
+// ============ ENTITIES ============
+const player={x:0,y:0,w:36,h:36,vx:0,vy:0,trail:[],shooting:false,shootCool:0};
+let platforms=[], bullets=[], gems_e=[], powerups=[], particles=[], stars=[];
+let keys={left:false,right:false,fire:false};
+
+// ============ POWERUP TYPES ============
+const POWERUPS=['shield','speed','multishot','heal'];
+
+// ============ UI ELEMENTS ============
+document.getElementById('startBtn').onclick=()=>startGame();
+document.getElementById('shopBtn').onclick=()=>openShop();
+document.getElementById('lbBtn').onclick=()=>openLB();
+document.getElementById('shopBack').onclick=()=>closeShop();
+document.getElementById('lbBack').onclick=()=>closeLB();
+document.getElementById('retryBtn').onclick=()=>startGame();
+document.getElementById('goMenuBtn').onclick=()=>showStart();
+document.getElementById('fireBtn').addEventListener('pointerdown',()=>keys.fire=true);
+document.getElementById('fireBtn').addEventListener('pointerup',()=>keys.fire=false);
+document.getElementById('leftBtn').addEventListener('pointerdown',()=>keys.left=true);
+document.getElementById('leftBtn').addEventListener('pointerup',()=>keys.left=false);
+document.getElementById('rightBtn').addEventListener('pointerdown',()=>keys.right=true);
+document.getElementById('rightBtn').addEventListener('pointerup',()=>keys.right=false);
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key==='a') keys.left=true;
+  if(e.key==='ArrowRight'||e.key==='d') keys.right=true;
+  if(e.key===' '||e.key==='z') keys.fire=true;
+});
+document.addEventListener('keyup',e=>{
+  if(e.key==='ArrowLeft'||e.key==='a') keys.left=false;
+  if(e.key==='ArrowRight'||e.key==='d') keys.right=false;
+  if(e.key===' '||e.key==='z') keys.fire=false;
+});
+
+// ============ SCREEN HELPERS ============
+function showStart(){
+  state='start';
+  ['hud','bossBar','fireBtn','leftBtn','rightBtn','gos','shopScreen','lbScreen'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('ss').classList.remove('hidden');
+  updateStartUI();
+}
+
+function updateStartUI(){
+  document.getElementById('ssHS').textContent='BEST: '+saveData.hs;
+  document.getElementById('ssGems').textContent='💎 '+saveData.gems+' gems';
+}
+
+function openShop(){
+  document.getElementById('ss').classList.add('hidden');
+  document.getElementById('shopScreen').classList.remove('hidden');
+  document.getElementById('shopGems').textContent='💎 '+saveData.gems+' gems';
+  buildSkinGrid();
+}
+
+function closeShop(){
+  document.getElementById('shopScreen').classList.add('hidden');
+  document.getElementById('ss').classList.remove('hidden');
+  updateStartUI();
+}
+
+function buildSkinGrid(){
+  const grid=document.getElementById('skinGrid');
+  grid.innerHTML='';
+  Object.entries(SKINS).forEach(([id,skin])=>{
+    const owned=saveData.owned.includes(id);
+    const selected=saveData.selected===id;
+    const card=document.createElement('div');
+    card.className='skin-card'+(owned?' owned':'')+(selected?' selected':'');
+    card.innerHTML=`<div class="skin-emoji">${skin.emoji}</div><div class="skin-name">${skin.name}</div><div class="skin-price ${owned?'owned':''} ${selected?'selected':''}">${selected?'✓ ACTIVE':owned?'OWNED':'💎 '+skin.price}</div>`;
+    card.onclick=()=>buySkin(id,skin,owned,selected);
+    grid.appendChild(card);
+  });
+}
+
+function buySkin(id,skin,owned,selected){
+  if(selected) return;
+  if(owned){saveData.selected=id;save();buildSkinGrid();return;}
+  if(saveData.gems>=skin.price){
+    saveData.gems-=skin.price;
+    saveData.owned.push(id);
+    saveData.selected=id;
+    save();
+    document.getElementById('shopGems').textContent='💎 '+saveData.gems+' gems';
+    buildSkinGrid();
+  } else {
+    alert('Not enough gems! 💎 Need '+skin.price);
+  }
+}
+
+function openLB(){
+  document.getElementById('ss').classList.add('hidden');
+  document.getElementById('lbScreen').classList.remove('hidden');
+  buildLB();
+}
+
+function closeLB(){
+  document.getElementById('lbScreen').classList.add('hidden');
+  document.getElementById('ss').classList.remove('hidden');
+}
+
+function buildLB(){
+  const list=document.getElementById('lbList');
+  const lb=saveData.lb.sort((a,b)=>b.score-a.score).slice(0,8);
+  if(lb.length===0){list.innerHTML='<div style="color:rgba(255,255,255,0.3);text-align:center;padding:20px;font-size:0.85rem;">No records yet — play to set a score!</div>';return;}
+  const medals=['gold','silver','bronze'];
+  list.innerHTML=lb.map((e,i)=>`
+    <div class="lb-item">
+      <div class="lb-rank ${medals[i]||''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
+      <div class="lb-info">
+        <div class="lb-name">${e.name||'PILOT'}</div>
+        <div class="lb-score">ALTITUDE ${e.score} · 💎${e.gems}</div>
+      </div>
+      <div class="lb-level">Z${e.zone}</div>
+    </div>
+  `).join('');
+}
+
+function addToLB(sc,gm,zo){
+  saveData.lb.push({name:'PILOT #'+Math.floor(Math.random()*999+1),score:sc,gems:gm,zone:zo,ts:Date.now()});
+  if(saveData.lb.length>20) saveData.lb=saveData.lb.sort((a,b)=>b.score-a.score).slice(0,20);
+  save();
+}
+
+// ============ GAME START ============
+function startGame(){
+  state='playing';
+  score=0;gems=0;level=1;zone=0;combo=0;comboTimer=0;
+  playerHP=3;maxHP=3;shield=false;shieldTimer=0;
+  cameraY=0;gameSpeed=1;
+  bossActive=false;bossHP=0;
+  lvlBannerTimer=0;pwMsgTimer=0;
+  platforms=[];bullets=[];gems_e=[];powerups=[];particles=[];
+  stars=generateStars();
+  platforms=genInitialPlatforms();
+  player.x=W/2-player.w/2;
+  player.y=H-200;
+  player.vx=0;player.vy=-20;
+  player.trail=[];player.shootCool=0;
+
+  ['ss','gos','shopScreen','lbScreen'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  ['hud','fireBtn','leftBtn','rightBtn'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
+  document.getElementById('bossBar').style.display='none';
+  document.getElementById('lvlBanner').classList.remove('show');
+}
+
+// ============ STARS ============
+function generateStars(){
+  return Array.from({length:100},()=>({x:Math.random()*W,y:Math.random()*H*4,r:Math.random()*1.5+0.3,tw:Math.random()*Math.PI*2,sp:0.15+Math.random()*0.4}));
+}
+
+// ============ PLATFORMS ============
+function genInitialPlatforms(){
+  const plats=[];
+  plats.push({x:W/2-65,y:H-140,w:130,h:15,type:'normal',vx:0,dir:1,gem:false,pw:null});
+  for(let i=1;i<22;i++) plats.push(makePlatform(H-140-i*80,i<4));
+  return plats;
+}
+
+function makePlatform(y,forceNormal=false){
+  const types=forceNormal?['normal']:['normal','normal','normal','boost','moving','bounce'];
+  const t=types[Math.floor(Math.random()*types.length)];
+  const w=t==='boost'?110:t==='moving'?100:t==='bounce'?80:115;
+  const x=Math.random()*(W-w-20)+10;
+  const hasGem=Math.random()<0.3;
+  const hasPW=!hasGem&&Math.random()<0.12;
+  return{x,y,w,h:15,type:t,vx:t==='moving'?(Math.random()*1.8+0.8)*(Math.random()>0.5?1:-1):0,dir:1,gem:hasGem,pw:hasPW?POWERUPS[Math.floor(Math.random()*POWERUPS.length)]:null,gemCollected:false,pwCollected:false};
+}
+
+// ============ BOSS ============
+function startBoss(){
+  bossActive=true;
+  const z=ZONES[zone];
+  bossMaxHP=z.bossHP+(zone*2);
+  bossHP=bossMaxHP;
+  bossX=W/2-30;
+  bossY=80;
+  bossDX=(2+zone*0.5)*(Math.random()>0.5?1:-1);
+  document.getElementById('bossBar').style.display='block';
+  document.getElementById('bossLabel').textContent=z.bossEmoji+' '+z.bossName;
+  document.getElementById('bossFill').style.width='100%';
+  showPWMsg(ZONES[zone].bossEmoji+' BOSS APPEARED!','#ff4444');
+}
+
+function defeatBoss(){
+  bossActive=false;
+  document.getElementById('bossBar').style.display='none';
+  spawnExplosion(bossX+30,bossY+30,'#ff4444',20);
+  gems_e.push({x:bossX+10,y:bossY+10,vy:-3,val:10+zone*5,collected:false});
+  zone=Math.min(zone+1,ZONES.length-1);
+  level++;
+  gameSpeed=1+level*0.12;
+  showLevelBanner('ZONE '+zone+' UNLOCKED','LEVEL '+level+' · '+ZONES[zone].name);
+  showPWMsg('💎 BONUS GEMS!','#ffd700');
+}
+
+function showLevelBanner(main,sub){
+  lvlBannerTimer=180;
+  document.getElementById('lvlTxt').textContent=main;
+  document.getElementById('lvlSub').textContent=sub;
+  document.getElementById('lvlBanner').classList.add('show');
+}
+
+function showPWMsg(msg,color='#00ff88'){
+  document.getElementById('pwMsg').textContent=msg;
+  document.getElementById('pwMsg').style.color=color;
+  document.getElementById('pwMsg').classList.add('show');
+  pwMsgTimer=90;
+}
+
+// ============ PARTICLES / EXPLOSIONS ============
+function spawnExplosion(x,y,color,count=10){
+  for(let i=0;i<count;i++){
+    const a=(Math.PI*2/count)*i+Math.random()*0.5;
+    particles.push({x,y,vx:Math.cos(a)*(Math.random()*5+1.5),vy:Math.sin(a)*(Math.random()*5+1.5)-1,r:Math.random()*5+2,life:1,color});
+  }
+}
+
+// ============ SHOOT ============
+function shoot(){
+  if(player.shootCool>0) return;
+  player.shootCool=12;
+  const skin=SKINS[saveData.selected];
+  const hasMultishot=shield; // reuse shield as multishot indicator (simplified)
+  bullets.push({x:player.x+player.w/2-3,y:player.y,vy:-14,w:6,h:14,color:skin.color});
+  if(hasMultishot){
+    bullets.push({x:player.x+player.w/2-3,y:player.y,vy:-13,vx:-3,w:5,h:12,color:skin.color});
+    bullets.push({x:player.x+player.w/2-3,y:player.y,vy:-13,vx:3,w:5,h:12,color:skin.color});
+  }
+  spawnExplosion(player.x+player.w/2,player.y,'#ffffff',3);
+}
+
+// ============ APPLY POWERUP ============
+function applyPowerup(type){
+  if(type==='shield'){shield=true;shieldTimer=300;showPWMsg('🛡️ SHIELD ACTIVE!','#00d4ff');}
+  else if(type==='speed'){gameSpeed=Math.min(gameSpeed+0.3,3);showPWMsg('⚡ SPEED BOOST!','#ffd700');}
+  else if(type==='multishot'){shield=true;shieldTimer=300;showPWMsg('🔱 MULTISHOT!','#7b61ff');}
+  else if(type==='heal'){playerHP=Math.min(playerHP+1,maxHP);showPWMsg('❤️ HEALED!','#00ff88');}
+}
+
+// ============ TAKE DAMAGE ============
+function takeDamage(){
+  if(shield) return;
+  playerHP--;
+  spawnExplosion(player.x+player.w/2,player.y+player.h/2,'#ff4444',8);
+  if(playerHP<=0) gameOver();
+}
+
+// ============ UPDATE ============
+let lastT=0;
+function loop(ts){
+  const dt=Math.min((ts-lastT)/16.67,3);
+  lastT=ts;
+  if(state==='playing') update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+function update(dt){
+  // MOVEMENT
+  if(keys.left) player.vx-=1.8*dt;
+  else if(keys.right) player.vx+=1.8*dt;
+  else player.vx*=(0.84**dt);
+  player.vx=Math.max(-11,Math.min(11,player.vx));
+  player.vy+=0.42*dt;
+  player.vy=Math.min(player.vy,18);
+  player.x+=player.vx*dt;
+  player.y+=player.vy*dt;
+  if(player.x>W) player.x=-player.w;
+  if(player.x+player.w<0) player.x=W;
+
+  // TRAIL
+  player.trail.push({x:player.x+player.w/2,y:player.y+player.h,life:1});
+  if(player.trail.length>16) player.trail.shift();
+  player.trail.forEach(t=>t.life-=0.07*dt);
+
+  // SHOOT
+  if(keys.fire) shoot();
+  if(player.shootCool>0) player.shootCool-=dt;
+
+  // SHIELD TIMER
+  if(shieldTimer>0){shieldTimer-=dt;if(shieldTimer<=0){shield=false;}}
+
+  // CAMERA
+  const camT=player.y-H*0.45;
+  if(camT<cameraY){
+    cameraY+=(camT-cameraY)*0.14*dt;
+    score=Math.floor(-cameraY/18);
+    if(score>saveData.hs){saveData.hs=score;save();}
+  }
+
+  // BOSS TRIGGER — every 800 altitude, trigger boss if not active
+  if(!bossActive && score>0 && score%(400+zone*200)<10 && score>100) startBoss();
+
+  // PLATFORM MOVE
+  platforms.forEach(p=>{
+    if(p.type==='moving'){p.x+=p.vx*p.dir*dt*gameSpeed;if(p.x<=0||p.x+p.w>=W)p.dir*=-1;}
+  });
+
+  // PLATFORM COLLISION
+  if(player.vy>0){
+    platforms.forEach(p=>{
+      const py=p.y-cameraY;
+      const bot=player.y+player.h;
+      const prevBot=bot-player.vy*dt-2;
+      if(player.x+player.w>p.x+4&&player.x<p.x+p.w-4&&bot>=py-2&&prevBot<=py+p.h+8){
+        player.y=py-player.h;
+        const bounceMap={normal:-21,boost:-28,moving:-22,bounce:-25};
+        player.vy=bounceMap[p.type]||-21;
+        combo++;
+        comboTimer=130;
+        if(combo>=2){
+          document.getElementById('comboEl').textContent=combo>=5?`🔥 x${combo} MEGA!`:combo>=3?`⚡ x${combo} COMBO!`:`x${combo}`;
+          document.getElementById('comboEl').classList.add('show');
+        }
+        spawnExplosion(player.x+player.w/2,py,ZONES[zone].platColor,6);
+        // GEM on platform
+        if(p.gem&&!p.gemCollected){p.gemCollected=true;gems++;saveData.gems++;save();}
+        // POWERUP
+        if(p.pw&&!p.pwCollected){p.pwCollected=true;applyPowerup(p.pw);}
+      }
+    });
+  }
+
+  // COMBO TIMER
+  if(comboTimer>0){comboTimer-=dt;}else{combo=0;document.getElementById('comboEl').classList.remove('show');}
+
+  // GEMS floating
+  gems_e.forEach(g=>{g.y+=g.vy*dt;g.vy+=0.1*dt;});
+  gems_e=gems_e.filter(g=>{
+    const gy=g.y-cameraY;
+    if(!g.collected&&Math.abs(g.x-player.x)<40&&Math.abs(gy-player.y)<40){
+      g.collected=true;gems+=g.val;saveData.gems+=g.val;save();return false;
+    }
+    return gy<H+100;
+  });
+
+  // BULLETS
+  bullets.forEach(b=>{b.y+=b.vy*dt;if(b.vx)b.x+=b.vx*dt;});
+  bullets=bullets.filter(b=>{
+    const by=b.y-cameraY;
+    // Hit boss
+    if(bossActive&&b.x>bossX&&b.x<bossX+60&&by>bossY-cameraY&&by<bossY-cameraY+60){
+      bossHP--;
+      bossHitTimer=8;
+      spawnExplosion(b.x,by,'#ff8800',5);
+      document.getElementById('bossFill').style.width=(bossHP/bossMaxHP*100)+'%';
+      if(bossHP<=0) defeatBoss();
+      return false;
+    }
+    return by>-100&&by<H+100;
+  });
+
+  // BOSS MOVEMENT
+  if(bossActive){
+    bossX+=bossDX*gameSpeed*dt;
+    if(bossX<=0||bossX+60>=W) bossDX*=-1;
+    if(bossHitTimer>0) bossHitTimer-=dt;
+    // Boss attacks player occasionally
+    if(Math.random()<0.003*dt&&!shield){
+      const bScreenY=bossY-cameraY;
+      if(bScreenY>0&&bScreenY<H&&Math.abs(bossX+30-player.x)<80) takeDamage();
+    }
+  }
+
+  // SPAWN PLATFORMS
+  const topY=Math.min(...platforms.map(p=>p.y));
+  if(topY>cameraY-80){
+    for(let i=0;i<3;i++) platforms.push(makePlatform(topY-80-i*80));
+  }
+  platforms=platforms.filter(p=>p.y-cameraY<H+200);
+
+  // PARTICLES
+  particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=0.1*dt;p.life-=0.04*dt;p.r*=0.97;});
+  particles=particles.filter(p=>p.life>0);
+
+  // LEVEL BANNER
+  if(lvlBannerTimer>0){lvlBannerTimer-=dt;}else document.getElementById('lvlBanner').classList.remove('show');
+
+  // PWMSG
+  if(pwMsgTimer>0){pwMsgTimer-=dt;}else document.getElementById('pwMsg').classList.remove('show');
+
+  // STARS
+  stars.forEach(s=>s.tw+=0.04);
+
+  // UPDATE HUD
+  document.getElementById('hudScore').textContent=score;
+  document.getElementById('hudGems').textContent='💎 '+gems;
+  document.getElementById('hudLevel').textContent='ZONE '+zone+' · LVL '+level;
+  document.getElementById('hudShield').textContent=shield?'🛡️':'';
+  document.getElementById('healthBar').style.width=(playerHP/maxHP*100)+'%';
+  document.getElementById('healthBar').style.background=playerHP>1?'linear-gradient(90deg,#00ff88,#00d4ff)':'linear-gradient(90deg,#ff4444,#ff8800)';
+
+  // FALL = game over
+  if(player.y-cameraY>H+120) gameOver();
+}
+
+function gameOver(){
+  state='over';
+  addToLB(score,gems,zone);
+  ['hud','fireBtn','leftBtn','rightBtn'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('bossBar').style.display='none';
+  document.getElementById('goScore').textContent=score;
+  document.getElementById('goGems').textContent='+💎 '+gems;
+  document.getElementById('goLevel').textContent='REACHED ZONE '+zone+' · LVL '+level;
+  document.getElementById('newRec').classList.toggle('show',score>=saveData.hs&&score>0);
+  document.getElementById('gos').classList.remove('hidden');
+}
+
+// ============ DRAW ============
+function draw(){
+  const z=ZONES[Math.min(zone,ZONES.length-1)];
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,z.bgTop);bg.addColorStop(1,z.bgBot);
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // Stars
+  stars.forEach(s=>{
+    const sy=((s.y+(-cameraY)*s.sp)%(H*4)+H*4)%(H*4)-H;
+    const a=0.3+Math.sin(s.tw)*0.4;
+    ctx.beginPath();ctx.arc(s.x,sy,s.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.fill();
+  });
+
+  if(state==='start') return;
+
+  // Platforms
+  platforms.forEach(p=>drawPlatform(p,z));
+
+  // Gems on platforms
+  platforms.forEach(p=>{
+    if(p.gem&&!p.gemCollected){
+      const py=p.y-cameraY-14;
+      ctx.font='14px serif';ctx.textAlign='center';
+      ctx.fillText('💎',p.x+p.w/2,py);
+    }
+    if(p.pw&&!p.pwCollected){
+      const py=p.y-cameraY-14;
+      const icons={shield:'🛡️',speed:'⚡',multishot:'🔱',heal:'❤️'};
+      ctx.font='14px serif';ctx.textAlign='center';
+      ctx.fillText(icons[p.pw]||'✨',p.x+p.w/2,py);
+    }
+  });
+
+  // Floating gems
+  gems_e.forEach(g=>{
+    ctx.font='18px serif';ctx.textAlign='center';
+    ctx.fillText('💎',g.x,g.y-cameraY);
+  });
+
+  // Particles
+  particles.forEach(p=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.color+Math.floor(p.life*255).toString(16).padStart(2,'0');
+    ctx.fill();
+  });
+
+  // Bullets
+  bullets.forEach(b=>{
+    const by=b.y-cameraY;
+    ctx.save();
+    ctx.shadowColor=SKINS[saveData.selected].color;
+    ctx.shadowBlur=8;
+    ctx.fillStyle=SKINS[saveData.selected].color;
+    ctx.beginPath();ctx.roundRect(b.x,by,b.w,b.h,3);ctx.fill();
+    ctx.restore();
+  });
+
+  // Boss
+  if(bossActive){
+    const bsy=bossY;
+    ctx.save();
+    if(bossHitTimer>0){ctx.globalAlpha=0.5;}
+    ctx.font='52px serif';ctx.textAlign='center';
+    ctx.fillText(ZONES[zone].bossEmoji,bossX+30,bsy+50);
+    // Boss health aura
+    ctx.beginPath();ctx.arc(bossX+30,bsy+25,35,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(255,68,68,${0.2+Math.sin(Date.now()*0.005)*0.15})`;
+    ctx.lineWidth=8;ctx.stroke();
+    ctx.restore();
+  }
+
+  // Player
+  if(state==='playing') drawPlayer(z);
+}
+
+function drawPlatform(p,z){
+  const py=p.y-cameraY;
+  if(py>H+30||py<-30) return;
+  const colors={normal:z.platColor,boost:'#ffd700',moving:'#7b61ff',bounce:'#ff6b00'};
+  const c=colors[p.type]||z.platColor;
+  ctx.save();
+  ctx.shadowColor=c;ctx.shadowBlur=10;
+  const g=ctx.createLinearGradient(p.x,py,p.x,py+p.h);
+  g.addColorStop(0,c);g.addColorStop(1,c+'66');
+  ctx.fillStyle=g;
+  ctx.beginPath();ctx.roundRect(p.x,py,p.w,p.h,7);ctx.fill();
+  ctx.beginPath();ctx.roundRect(p.x+5,py+3,p.w-10,4,2);
+  ctx.fillStyle='rgba(255,255,255,0.35)';ctx.fill();
+  if(p.type==='boost'){
+    ctx.shadowBlur=0;ctx.font='bold 10px Exo 2';ctx.fillStyle='#000';ctx.textAlign='center';
+    ctx.fillText('⚡ BOOST',p.x+p.w/2,py+11);
+  }
+  ctx.restore();
+}
+
+function drawPlayer(z){
+  const px=player.x,py=player.y-cameraY;
+  const skin=SKINS[saveData.selected];
+
+  // Trail
+  player.trail.forEach((t,i)=>{
+    const a=t.life*0.45*(i/player.trail.length);
+    ctx.beginPath();ctx.arc(t.x,t.y-cameraY,5*(i/player.trail.length),0,Math.PI*2);
+    ctx.fillStyle=`${skin.color}${Math.floor(a*255).toString(16).padStart(2,'0')}`;
+    ctx.fill();
+  });
+
+  // Shield aura
+  if(shield){
+    ctx.save();ctx.globalAlpha=0.3+Math.sin(Date.now()*0.01)*0.15;
+    ctx.beginPath();ctx.arc(px+player.w/2,py+player.h/2,30,0,Math.PI*2);
+    ctx.strokeStyle='#00d4ff';ctx.lineWidth=3;ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.translate(px+player.w/2,py+player.h/2);
+  ctx.rotate(player.vx*0.035);
+  ctx.shadowColor=skin.color;ctx.shadowBlur=18;
+  ctx.font=`${player.w}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(skin.emoji,0,0);
+  ctx.restore();
+
+  // Flame
+  const fh=15+Math.random()*5;
+  const fg=ctx.createLinearGradient(0,py+player.h,0,py+player.h+fh);
+  fg.addColorStop(0,'#fff');fg.addColorStop(0.4,'#ffcc00');fg.addColorStop(1,'transparent');
+  ctx.fillStyle=fg;
+  ctx.beginPath();ctx.moveTo(px+player.w/2-7,py+player.h);ctx.lineTo(px+player.w/2+7,py+player.h);ctx.lineTo(px+player.w/2,py+player.h+fh);ctx.closePath();ctx.fill();
+}
+</script>
+</body>
+</html>
